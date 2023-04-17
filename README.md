@@ -26,7 +26,11 @@ sourceCpp("~update_github.cpp")
 
 ## Simulation 
 
-We present the code of Sim 1 in the papaer. 
+We present the code of Sim 1 in the papaer. We need another a few packages installed to simulate the synthentic dataset. 
+
+```
+install.packages(c("mvnfast", "statmod", "GIGrvg", "extraDistr", "abind"))
+```
 
 
 ```
