@@ -16,4 +16,13 @@ install.packages(c("Rcpp", "RcppArmadillo"))
 
 Please make sure the C++ compiler is correctly installed. 
 
-All the parameters update are in update_github.Rcpp file. 
+All the parameters update are in update_github.Rcpp file. To load the update functions, use the command:
+
+```
+sourceCpp("~update_github.cpp")
+```
+
+
+
+## Simulation 
+
