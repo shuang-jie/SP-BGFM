@@ -127,7 +127,7 @@ for(mi in 1:m){
 
 y.star.true = matrix(NA, nrow = n, ncol = Jsum)
 set.seed(seed)
-library(mvnfast)
+
 for(i in 1:n){
   y.star.true[i, ] = rmvn(1, mu.true[i, ], Omega.true)
 }
@@ -282,8 +282,6 @@ pos.phi = function(t.phi, wj){
 
 ######################### run MCMC #########################
 niter = 100000
-library(statmod)
-library(GIGrvg)
 
 sig2.xi.r = rep(1, m)
 log.Y = log(Y)
