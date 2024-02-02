@@ -14,7 +14,7 @@ library(extraDistr)
 
 ########################## load update function ##################
 
-sourceCpp("update_GIG_Subject.cpp")
+sourceCpp("./simulation-code/update_GIG_Subject.cpp")
 V.recover.psi = function(x){
   log_x = log(x)
   log_x[is.infinite(log_x)] = -.Machine$double.xmax
@@ -360,7 +360,7 @@ for(ni in 1:niter){
   }
 }
 
-save.image("Sim 1.RData")
+save.image("./simulation-code/Sim 1.RData")
 
 
 

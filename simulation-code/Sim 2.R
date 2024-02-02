@@ -2,7 +2,7 @@ rm(list = ls())
 
 ######################### load real data and obtain empirical zero rate ########
 
-load("Filtered7539OTUs.RData")
+load("./real-data/Filtered7539OTUs.RData")
 Y1 = Y[, 1:J[1]]; Y2 = Y[, 1:J[2] + J[1]]
 zero.rate1 = apply(Y1, 2, function(x) sum(x==0)/n)
 zero.rate2 = apply(Y2, 2, function(x) sum(x==0)/n)
@@ -22,7 +22,7 @@ library(extraDistr)
 
 ########################## load update function ##################
 
-sourceCpp("update_GIG_Subject.cpp")
+sourceCpp("./simulation-code/update_GIG_Subject.cpp")
 V.recover.psi = function(x){
   log_x = log(x)
   log_x[is.infinite(log_x)] = -.Machine$double.xmax
@@ -415,6 +415,6 @@ for(ni in 1:niter){
   }
 }
 
-save.image("Sim 2.RData")
+save.image("./simulation-code/Sim 2.RData")
 
 
