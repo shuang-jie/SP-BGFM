@@ -46,3 +46,55 @@ decorate_heatmap_body("Cor2",{
   grid.lines(c(0, 1), c(0.25, 0.25), gp = gpar(lty = 1, lwd = 1.5))
 })
 
+################### Plot Fig 4(b)  ############################
+
+est.cor <- read.csv("./figures-code/Sim 1-MOFA.csv", header=FALSE)
+est.cor <- as.matrix(est.cor); est.cor = cov2cor(est.cor)
+poscor.vs.trcor.MOFA = true.cor
+poscor.vs.trcor.MOFA[upper.tri(poscor.vs.trcor.MOFA)] = est.cor[upper.tri(est.cor)]
+poscor.vs.trcor.MOFA[upper.tri(poscor.vs.trcor.MOFA)] = est.cor[upper.tri(est.cor)]
+poscor.vs.trcor.MOFA.1 = poscor.vs.trcor.MOFA[, 1:J[1]]
+poscor.vs.trcor.MOFA.2 = poscor.vs.trcor.MOFA[, 1:J[2] + J[1]]
+ht1 = Heatmap(poscor.vs.trcor.MOFA.1, column_title = "Group 1", name = "Cor1", col = col_fun, cluster_rows = F,  cluster_columns = F, heatmap_legend_param = list(
+  title = "Cor",
+  legend_height = unit(15, "cm"), border = "black"
+), border_gp = gpar(col = "black"), column_title_gp=gpar(fontsize=20))
+ht2 = Heatmap(poscor.vs.trcor.MOFA.2, column_title = "Group 2",  name = "Cor2", col = col_fun, cluster_rows = F,  cluster_columns = F, heatmap_legend_param = list(
+  title = "Cor",
+  legend_height = unit(15, "cm") , border = "black"
+),show_heatmap_legend = FALSE, border_gp = gpar(col = "black"), column_title_gp=gpar(fontsize=20))
+ht_list = ht1  + ht2 
+draw(ht_list, row_title = "", column_title = "")
+decorate_heatmap_body("Cor1",{
+  grid.lines(c(0, 1), c(0.25, 0.25), gp = gpar(lty = 1, lwd = 1.5))
+})
+decorate_heatmap_body("Cor2",{
+  grid.lines(c(0, 1), c(0.25, 0.25), gp = gpar(lty = 1, lwd = 1.5))
+})
+
+################### Plot Fig 4(c)  ############################
+
+load("./simulation-code/Sim 1.RData")
+se.gl.cor = as.matrix(se.gl.cor)
+poscor.vs.trcor.SPIEC.EASI = true.cor
+poscor.vs.trcor.SPIEC.EASI[upper.tri(poscor.vs.trcor.SPIEC.EASI)] = se.gl.cor[upper.tri(se.gl.cor)]
+poscor.vs.trcor.SPIEC.EASI[upper.tri(poscor.vs.trcor.SPIEC.EASI)] = se.gl.cor[upper.tri(se.gl.cor)]
+poscor.vs.trcor.SPIEC.EASI.1 = poscor.vs.trcor.SPIEC.EASI[, 1:J[1]]
+poscor.vs.trcor.SPIEC.EASI.2 = poscor.vs.trcor.SPIEC.EASI[, 1:J[2] + J[1]]
+ht1 = Heatmap(poscor.vs.trcor.SPIEC.EASI.1, column_title = "Group 1", name = "Cor1", col = col_fun, cluster_rows = F,  cluster_columns = F, heatmap_legend_param = list(
+  title = "Cor",
+  legend_height = unit(15, "cm"), border = "black"
+), border_gp = gpar(col = "black"), column_title_gp=gpar(fontsize=20))
+ht2 = Heatmap(poscor.vs.trcor.SPIEC.EASI.2, column_title = "Group 2",  name = "Cor2", col = col_fun, cluster_rows = F,  cluster_columns = F, heatmap_legend_param = list(
+  title = "Cor",
+  legend_height = unit(15, "cm") , border = "black"
+),show_heatmap_legend = FALSE, border_gp = gpar(col = "black"), column_title_gp=gpar(fontsize=20))
+ht_list = ht1  + ht2 
+draw(ht_list, row_title = "", column_title = "")
+list_components()
+decorate_heatmap_body("Cor1",{
+  grid.lines(c(0, 1), c(0.25, 0.25), gp = gpar(lty = 1, lwd = 1.5))
+})
+decorate_heatmap_body("Cor2",{
+  grid.lines(c(0, 1), c(0.25, 0.25), gp = gpar(lty = 1, lwd = 1.5))
+})
