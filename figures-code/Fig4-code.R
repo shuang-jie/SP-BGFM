@@ -14,6 +14,7 @@ library(ggplot2)
 library(latex2exp)
 library(ComplexHeatmap)
 library(circlize)
+col_fun = colorRamp2(c(-1, 0, 1), c("green", "white", "red"))
 
 ################### Plot Fig 4(a)  ############################
 
@@ -25,7 +26,6 @@ for(i in burn){
 mar.pos.cor = apply(mar.pos.cor.array, c(1,2), median)
 true.cor = cov2cor(Omega.true)
 poscor.vs.trcor = true.cor
-col_fun = colorRamp2(c(-1, 0, 1), c("green", "white", "red"))
 poscor.vs.trcor[upper.tri(poscor.vs.trcor)] = mar.pos.cor[upper.tri(mar.pos.cor)]
 poscor.vs.trcor.1 = poscor.vs.trcor[, 1:J[1]]
 poscor.vs.trcor.2 = poscor.vs.trcor[, 1:J[2] + J[1]]
@@ -74,7 +74,7 @@ decorate_heatmap_body("Cor2",{
 
 ################### Plot Fig 4(c)  ############################
 
-load("./simulation-code/Sim 1.RData")
+load("./figures-code/Sim 1-SPIEC-EASI.RData")
 se.gl.cor = as.matrix(se.gl.cor)
 poscor.vs.trcor.SPIEC.EASI = true.cor
 poscor.vs.trcor.SPIEC.EASI[upper.tri(poscor.vs.trcor.SPIEC.EASI)] = se.gl.cor[upper.tri(se.gl.cor)]
