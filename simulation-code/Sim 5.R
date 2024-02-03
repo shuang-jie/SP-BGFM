@@ -18,6 +18,33 @@ library(mvnfast)
 library(statmod)
 library(extraDistr)
 
+vineBeta <- function(d, b){
+  P = matrix(0, d, d)
+  S = diag(d)
+  
+  for(k in 1:(d-1)){
+    for(i in (k+1):d){
+      P[k, i] = rbeta(1, b, b) 
+      P[k, i] = (P[k, i] - 0.5) * 2
+      if(abs(P[k ,i]) <0.8) {P[k ,i]=0}
+      p = P[k, i]
+      
+      if(k == 1){
+        p = p
+      } else {
+        for(l in (k-1):1 ){
+          p = p * sqrt((1-P[l,i]^2)*(1-P[l,k]^2)) + P[l,i]*P[l,k]
+        }
+      }
+      
+      S[k, i] = p
+      S[i, k] = p
+    }
+  }
+  permutation = sample(1:d, d, replace = F)
+  return(S)
+}
+
 ########################## simulate count data #######################
 
 seed = 3
@@ -78,32 +105,6 @@ pos.phi = function(t.phi, wj){
   ttt[ttt==0] = sort(ttt[ttt!=0])[1]
   dgamma(t.phi[wj], a.phi, 1, log = T) + sum(dnorm(Lambda[, ki], 0, ttt, log=T)) + log(t.phi[wj])
 }
-vineBeta <- function(d, b){
-  P = matrix(0, d, d)
-  S = diag(d)
-  
-  for(k in 1:(d-1)){
-    for(i in (k+1):d){
-      P[k, i] = rbeta(1, b, b) 
-      P[k, i] = (P[k, i] - 0.5) * 2
-      if(abs(P[k ,i]) <0.8) {P[k ,i]=0}
-      p = P[k, i]
-      
-      if(k == 1){
-        p = p
-      } else {
-        for(l in (k-1):1 ){
-          p = p * sqrt((1-P[l,i]^2)*(1-P[l,k]^2)) + P[l,i]*P[l,k]
-        }
-      }
-      
-      S[k, i] = p
-      S[i, k] = p
-    }
-  }
-  permutation = sample(1:d, d, replace = F)
-  return(S)
-}
 
 ####################### set up dimension in the paper ############
 
@@ -112,12 +113,12 @@ Jsum = ncol(Y)
 S = rep(1:s, each = 1)
 M = rep(c(1:m), J)
 
-######################### prior hyper-parameter #########################
+######################### prior hyper-parameter ####################
 
 K = 25; a.sig = 3; b.sig = 3; a.phi = 1/20 
 a.tau = 0.1; b.tau = 1/Jsum; acc.tar = 0.234
 
-######################### prior mean hyper-parameter #########################
+###################### prior mean hyper-parameter ##################
 
 hat.ri = matrix(NA, nrow = m, ncol = n)
 for(mi in 1:m){
