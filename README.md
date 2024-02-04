@@ -23,13 +23,30 @@ Please make sure the C++ compiler is correctly installed. For Mac user, please i
 
 ## Organization
 
-### simulation code
+### simulation-code
 
-Running our_type1.R with this.sim.id between 1-6 produces the results displayed in Figure 4.
+Running Sim 1-5.R produces the results displayed in Sim 1-5 in the paper and please save the result as RData with this.sim.id.
 
-Running cond_power.R with this.sim.id between 1-3 produces the results displayed in Figure 5.
+### real-data
 
-Running our_type1_est.R with this.sim.id between 1-4 produces the results displayed in Figure S1.
+Filtered7539OTUs.RData is the multi-domain skin microbiome data from the paper. 
 
-Running power.R with this.sim.id between 1-9 produces the results displayed in Figures S2-S3.
+### real-data-code
+
+Real Data.R produces the results displayed in real data in the paper and please save the result as RData with Real Data.RData
+
+### figures-code
+
+Produces Figures 1-10 in the main text.
+
+### figures
+
+Contains the results from calling the code in the figures-code folder.
+
+
+
+
+
+
+
 
