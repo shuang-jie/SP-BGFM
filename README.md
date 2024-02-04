@@ -33,8 +33,10 @@ Filtered7539OTUs.RData is the multi-domain skin microbiome data from the paper.
 
 In the real data, it contains:
 
-``` Y1 ``` : bacterial microbiome count table. 60 samples $\times$ 75 OTUs. Each row is a sample, and each column is a bacterial OTU.  
+``` Y1 ``` : bacterial microbiome count table. 60 samples $\times$ 75 OTUs. Each row is a sample, and each column is a bacterial OTU. 
+
 ``` Y2 ``` : viral microbiome count table. 60 samples $\times$ 39 OTUs. Each row is a sample, and each column is a viral OTU.   
+
 ``` Y ``` : combined multi-domain skin microbiome data.  60 samples $\times$ 114(75+39) OTUs.
 
 ``` X ``` : a categorical covariate representing experimental conditions. (1,0,0) pre-treatment & (0,1,0) post-treatment &  (0,0,1) healthy condition.
