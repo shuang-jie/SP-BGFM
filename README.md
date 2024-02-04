@@ -8,21 +8,13 @@ Contact: Shuangjie Zhang (szhan209 AT ucsc DOT edu)
 
 ## Installation
 
-SP-BGFM requires Rcpp and RcppArmadillo. Download and install R from [https://www.r-project.org/](https://www.r-project.org/). Once installed, open R from the terminal with R and run the following command:
+SP-BGFM requires some packages, especially Rcpp and RcppArmadillo for Rc++ functions: 
 
 ```
-install.packages(c("Rcpp", "RcppArmadillo"))
+install.packages(c("Rcpp", "RcppArmadillo", "statmod", "GIGrvg", "extraDistr", "abind", "mvnfast", "mvnfast", "statmod", "extraDistr"))
 ```
 
 Please make sure the C++ compiler is correctly installed. 
-
-All the parameter update functions are in update_github.Rcpp file. To load the update functions, use the command:
-
-```
-sourceCpp("~update_github.cpp")
-```
-
-
 
 ## Simulation 
 
