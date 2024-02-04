@@ -14,6 +14,12 @@ SP-BGFM requires some packages, especially Rcpp and RcppArmadillo for Rc++ funct
 install.packages(c("Rcpp", "RcppArmadillo", "statmod", "GIGrvg", "extraDistr", "abind", "mvnfast", "mvnfast", "statmod", "extraDistr"))
 ```
 
+For a comparison of the SPIEC-EASI method, please install
+
+```
+install.packages("SpiecEasi")
+```
+
 Please make sure the C++ compiler is correctly installed. 
 
 ## Simulation 
