@@ -38,9 +38,13 @@ In the real data, it contains:
 ``` Y ``` : combined multi-domain skin microbiome data.  60 samples $\times$ 114(75+39) OTUs.
 
 ``` X ``` : a categorical covariate representing experimental conditions. (1,0,0) pre-treatment & (0,1,0) post-treatment &  (0,0,1) healthy condition.
+
 ``` J ``` : number of OTUs in each domain. (75, 39)
+
 ``` Jsum ``` : number of total OTUs. 114
+
 ``` n ``` : number of samples. 60
+
 ``` S ``` : number of subjects. 20
 
 ### real-data-code
