@@ -31,6 +31,12 @@ Running Sim 1-5.R produces the results displayed in Sim 1-5 in the paper and ple
 
 Filtered7539OTUs.RData is the multi-domain skin microbiome data from the paper. 
 
+In the real data, it contains:
+
+``` Y1 ``` : bacterial microbiome count table. 60 samples $\times$ Each row is sample , 
+``` Y2 ``` : the 
+``` Y ``` : the 
+
 ### real-data-code
 
 Real Data.R produces the results displayed in real data in the paper and please save the result as RData with Real Data.RData
