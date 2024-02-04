@@ -20,7 +20,7 @@ For a comparison of the SPIEC-EASI method, please install
 install.packages("SpiecEasi")
 ```
 
-Please make sure the C++ compiler is correctly installed. 
+Please make sure the C++ compiler is correctly installed. For Mac user, please install Xcode from command line tools. Execute the command ```xcode-select --install``` on Terminal.
 
 ## Simulation 
 
