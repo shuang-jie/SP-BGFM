@@ -3,7 +3,7 @@ SP-BGFM (Sparse Bayesian Group Factor Model for Feature Interactions in Multiple
 
 Code to reproduce simulation results, figures, and real data analysis results from the paper "Sparse Bayesian Group Factor Model for Feature Interactions in Multiple Count Tables Data" by Shuangjie Zhang, Yuning Shen, Irene A. Chen and Juhee Lee.
 
-Contact: Shuangjie Zhang (szhan209 AT ucsc DOT edu)
+Contact: Shuangjie Zhang (szhan209 AT tamu DOT edu)
 
 ## Environment Setup
 
