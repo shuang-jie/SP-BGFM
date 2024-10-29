@@ -1,7 +1,7 @@
 ######################################## 
 ############    !!note!!     ###########
-###### Please first run Sim 1 and ###### 
-###### save result as Sim 1.RData ###### 
+###### Please first run Sim 2 and ###### 
+###### save result as Sim 2.RData ###### 
 ######################################## 
 
 ################## load simulation 2 result ####################
