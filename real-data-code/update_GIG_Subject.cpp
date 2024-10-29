@@ -229,19 +229,16 @@ rowvec update_tau_GIG(int K, double a_tau, double b_tau, int Jsum, mat Lambda, m
 }
 
 // [[Rcpp::export]]
-cube update_psi_w_r(int m, int Lr, mat Si1, mat Si2, double a_w, double b_w, double a_psi_r){
-  mat w_l_r_m(m, Lr);
+mat update_psi_r(int m, int Lr, mat Si1, double a_psi_r){
+  
   mat psi_r_m(m, Lr);
   
   for(int mi = 0; mi < m; mi++) {
     rowvec M_Lr(Lr);
     rowvec V_r(Lr);
     rowvec psi_r(Lr);
-    rowvec w_l_r(Lr);
     for(int l=0; l< Lr; l++){
       M_Lr(l) = sum(Si1.row(mi)==l);
-      w_l_r(l) = R::rbeta(sum( (Si1.row(mi)==l) % (Si2.row(mi) ==1)) + a_w,
-            sum(  (Si1.row(mi)==l) % (Si2.row(mi) ==0)) + b_w);
     }
     for(int l=0; l< Lr; l++){
       uvec pos = seq_cpp(l+1, Lr-1);
@@ -256,15 +253,77 @@ cube update_psi_w_r(int m, int Lr, mat Si1, mat Si2, double a_w, double b_w, dou
     try2 = cumprod(try2);
     psi_r = try1 % try2;
     
-    w_l_r_m.row(mi) = w_l_r;
     psi_r_m.row(mi) = psi_r;
   }
-  
-  cube res(m, Lr, 2);
-  res.slice(0) = psi_r_m;
-  res.slice(1) = w_l_r_m;
+  return(psi_r_m);
+}
+
+// [[Rcpp::export]]
+double poswrt(double winput, rowvec riinput, double sumSi1lSi21, double sumSi1lSi20, double sig2,
+              double a_w_r, double b_w_r, double xi_l_rinput, double nu_r){
+  double res;
+  rowvec rifinal = riinput - (nu_r-winput*xi_l_rinput)/(1-winput);
+  double rrss = sum(sum(rifinal % rifinal));
+  res= log(winput) * (a_w_r + sumSi1lSi21  +1) + 
+    log(1-winput) * (b_w_r + sumSi1lSi20  +1) - 1.0/(2.0*sig2) * rrss;
   return(res);
 }
+
+// [[Rcpp::export]]
+Rcpp::List update_w_r_new(mat w_l_r_m, int m, int Lr, mat Si1, mat Si2, double a_w_r, double b_w_r,
+                   mat sig_pro_wlr, mat ri, mat loglbd_wr, rowvec sig2, mat xi_l_r, rowvec nu_r,
+                   mat nacc_w_r, mat true_nacc_w_r, double gamma_adap, double acc_tar, mat mu_adap_w_r, int n){
+  for(int mm=0; mm < m; mm++){
+  rowvec rim = ri.row(mm);
+  rowvec Sim1 = Si1.row(mm);
+  rowvec Sim2 = Si2.row(mm);
+    
+  for(int l=0; l< Lr; l++){
+    double sumSi1lSi21 = sum( (Sim1==l) % (Sim2 ==1));
+    double sumSi1lSi20 = sum( (Sim1==l) % (Sim2 ==0));
+
+    if(sumSi1lSi20 ==0){
+      w_l_r_m(mm, l) = R::rbeta(a_w_r + sumSi1lSi21, b_w_r);
+    } else{
+      double old_w = w_l_r_m(mm, l);
+      double old_tw = log(old_w/(1-old_w));
+      double new_tw = R::rnorm(0, 1) * sig_pro_wlr(mm, l) * exp(loglbd_wr(mm, l)/2.0) + old_tw;
+      double new_w = exp(new_tw)/(1+exp(new_tw));
+      uvec idx0 = find( (Sim1==l)  % (Sim2==0) );
+      rowvec  rim_sub = (rim.elem(idx0)).t();
+
+      double xi_l_ainput = xi_l_r(mm, l);
+
+      double d_log =  poswrt(new_w, rim_sub, sumSi1lSi21, sumSi1lSi20, sig2(mm), a_w_r, b_w_r, xi_l_ainput, nu_r(mm))
+        - poswrt(old_w, rim_sub, sumSi1lSi21, sumSi1lSi20, sig2(mm), a_w_r, b_w_r, xi_l_ainput, nu_r(mm));
+
+      vec tt(2); tt(0)=1; tt(1) = exp(d_log); double acc = min(tt);
+      double cc = R::runif(0, 1);
+
+      if(cc<acc){
+        w_l_r_m(mm, l) = new_w;
+        nacc_w_r(mm, l) ++;
+        true_nacc_w_r(mm, l) ++;
+      }
+
+      loglbd_wr(mm, l) = loglbd_wr(mm, l) + gamma_adap * (acc - acc_tar);
+      double w_a_mu_diff =  w_l_r_m(mm, l)  - mu_adap_w_r(mm, l);
+      mu_adap_w_r(mm, l) = mu_adap_w_r(mm, l) + gamma_adap * w_a_mu_diff;
+      sig_pro_wlr(mm, l) = sig_pro_wlr(mm, l) + gamma_adap*(pow(w_a_mu_diff, 2) - sig_pro_wlr(mm, l));
+    }
+  }
+  }
+  
+  Rcpp::List result;
+  result["w_l_r_m"] = w_l_r_m;
+  result["mu_adap_w_r"] = mu_adap_w_r;
+  result["sig_pro_wlr"] = sig_pro_wlr;
+  result["nacc_w_r"] = nacc_w_r;
+  result["true_nacc_w_r"] = true_nacc_w_r;
+  result["loglbd_wr"] = loglbd_wr;
+  return(result);
+}
+
 
 // [[Rcpp::export]]
 cube update_Si12(int Lr, int n, int m,  mat ri, mat xi, double ur2, rowvec nu_r,
@@ -344,25 +403,20 @@ mat update_ri(int m, int n, double ur2, rowvec J, rowvec sig2, mat RSS, rowvec J
 }
 
 // [[Rcpp::export]]
-cube update_psi_w(int m, int Lalpha, rowvec J_bound, mat Sij1, mat Sij2,
-                  double a_w_alpha, double b_w_alpha, double a_psi_alpha){
-  mat w_l_a_m(m, Lalpha);
+mat update_psi_a(int m, int Lalpha, rowvec J_bound, mat Sij1, double a_psi_alpha){
+  
   mat psi_a_m(m, Lalpha);
   rowvec M_La(Lalpha);
   rowvec V_a(Lalpha);
   rowvec psi_a(Lalpha);
-  rowvec w_l_a(Lalpha);
+  
   for(int mi = 0; mi < m; mi++) {
     mat Sij1_sub = Sij1.cols(J_bound(mi)+ 1*(mi!=0), J_bound(mi+1));
-    mat Sij2_sub = Sij2.cols(J_bound(mi)+ 1*(mi!=0), J_bound(mi+1));
-    
+
     for(int l=0; l< Lalpha; l++){
       M_La(l) = sum(vectorise(Sij1_sub)==l);
-      w_l_a(l) = R::rbeta( sum( (vectorise(Sij1_sub)==l) % (vectorise(Sij2_sub) ==1)) + a_w_alpha,
-            sum( (vectorise(Sij1_sub)==l) % (vectorise(Sij2_sub) ==0)) + b_w_alpha);
     }
-    w_l_a_m.row(mi) = w_l_a;
-    
+
     for(int l=0; l< Lalpha; l++){
       uvec pos = seq_cpp(l+1, Lalpha-1);
       V_a(l) = R::rbeta(1+M_La(l), a_psi_alpha + sum(M_La.elem(pos)));
@@ -378,11 +432,87 @@ cube update_psi_w(int m, int Lalpha, rowvec J_bound, mat Sij1, mat Sij2,
     psi_a = try1 % try2;
     psi_a_m.row(mi) = psi_a;
   }
+  return(psi_a_m);
+}
+
+// [[Rcpp::export]]
+Rcpp::List update_w_a(mat w_a, int m, int Lalpha, rowvec J_bound, mat Sij1, mat Sij2, 
+                      mat Iij1, mat Iij2, double a_w_alpha, double b_w_alpha,
+               mat sig_pro_wla, mat RSS, mat loglbd_wa, rowvec sig2, mat xi_l_a, rowvec nu_a,
+               mat nacc_w_a, mat true_nacc_w_a, double gamma_adap, double acc_tar,
+               mat mu_adap_w_a, int n){
+  for(int mi=0; mi < m; mi++){
+    mat Sij1_sub = Sij1.cols(J_bound(mi)+ 1*(mi!=0), J_bound(mi+1));
+    mat Sij2_sub = Sij2.cols(J_bound(mi)+ 1*(mi!=0), J_bound(mi+1));
+    mat Iij1_sub = Iij1.cols(J_bound(mi)+ 1*(mi!=0), J_bound(mi+1));
+    mat Iij2_sub = Iij2.cols(J_bound(mi)+ 1*(mi!=0), J_bound(mi+1));
+    mat RSS_sub = RSS.cols(J_bound(mi) + 1*(mi!=0), J_bound(mi+1));
+    int J = Sij1_sub.n_cols;
+    arma::uvec pos = seq_cpp(J_bound(mi) + 1*(mi!=0), J_bound(mi+1));
+    vec nu_a_sub = nu_a.elem(pos);
+    mat xi_l_a_sub = xi_l_a.rows(J_bound(mi) + 1*(mi!=0), J_bound(mi+1));
+    
+    for(int l=0; l< Lalpha; l++){
+      double sumIjlIj21 = sum(sum( (Sij1_sub==l) % (Sij2_sub ==1)));
+      double sumIjlIj20 = sum(sum( (Sij1_sub==l) % (Sij2_sub ==0)));
+
+      if(sumIjlIj20 == 0){
+        w_a(mi, l) = R::rbeta(a_w_alpha + sumIjlIj21, b_w_alpha);
+      } else{
+
+        double old_w = w_a(mi, l);
+        double old_tw = log(w_a(mi, l)/(1-w_a(mi, l)));
+        double new_tw = R::rnorm(0, 1) * sig_pro_wla(mi, l) * exp(loglbd_wa(mi, l)/2.0) + old_tw;
+        double new_w = exp(new_tw)/(1+exp(new_tw));
+        if(new_w > 1-9.9*pow(10, -17)) {new_w = 1-9.9*pow(10, -17);}
+        if(new_w <  9.9*pow(10, -17)) {new_w = 9.9*pow(10, -17);}
+        new_tw = log(new_w/(1-new_w));
+
+        mat old_alpha_ij(n, J);
+        mat new_alpha_ij(n, J);
+        for(int i=0; i< n; i++){
+          for(int j=0; j<J; j++){
+            if(Iij2_sub(i,j) == 0){
+              old_alpha_ij(i, j) = new_alpha_ij(i, j) = xi_l_a_sub(j ,Iij1_sub(i,j));
+            } else {
+              old_alpha_ij(i, j) = (nu_a_sub(j)-old_w* xi_l_a_sub(j ,Iij1_sub(i,j)))/(1-old_w);
+              new_alpha_ij(i, j) = (nu_a_sub(j)-new_w* xi_l_a_sub(j ,Iij1_sub(i,j)))/(1-new_w);
+            }
+          }
+        }
+
+        double d_log =  log(new_w) * (a_w_alpha + sumIjlIj21  +1) +
+          log(1-new_w) * (b_w_alpha + sumIjlIj20  +1) - 1.0/(2.0*sig2(mi)) * sum(sum( (RSS_sub-new_alpha_ij) % (RSS_sub-new_alpha_ij)  )) -
+          (log(old_w) * (a_w_alpha + sumIjlIj21  +1) +
+          log(1-old_w) * (b_w_alpha + sumIjlIj20  +1) - 1.0/(2.0*sig2(mi)) * sum(sum( (RSS_sub-old_alpha_ij) % (RSS_sub-old_alpha_ij) )));
+        vec tt(2); tt(0)=1; tt(1) = exp(d_log); double acc = min(tt);
+        double cc = R::runif(0, 1);
+
+        if(cc<acc){
+          w_a(mi, l) = new_w;
+          nacc_w_a(mi, l) ++;
+          true_nacc_w_a(mi, l) ++;
+        }
+
+        loglbd_wa(mi, l) = loglbd_wa(mi, l) + gamma_adap * (acc - acc_tar);
+        double w_a_mu_diff =  w_a(mi, l)  - mu_adap_w_a(mi, l);
+        mu_adap_w_a(mi, l) = mu_adap_w_a(mi, l) + gamma_adap * w_a_mu_diff;
+        sig_pro_wla(mi, l) = sig_pro_wla(mi, l) + gamma_adap*(pow(w_a_mu_diff, 2) - sig_pro_wla(mi, l));
+        if(sig_pro_wla(mi, l)>10){sig_pro_wla(mi, l)=10;}
+        if(loglbd_wa(mi, l)>10){loglbd_wa(mi, l)=10;}
+      }
+    }
+  }
+
+  Rcpp::List result;
+  result["w_a"] = w_a;
+  result["mu_adap_w_a"] = mu_adap_w_a;
+  result["sig_pro_wla"] = sig_pro_wla;
+  result["nacc_w_a"] = nacc_w_a;
+  result["true_nacc_w_a"] = true_nacc_w_a;
+  result["loglbd_wa"] = loglbd_wa;
+  return(result);
   
-  cube res(m, Lalpha, 2);
-  res.slice(0) = psi_a_m;
-  res.slice(1) = w_l_a_m;
-  return(res);
 }
 
 // [[Rcpp::export]]
@@ -453,5 +583,3 @@ mat update_xi_alpha(int Lalpha, int Jsum, mat RSS, mat IIJ1, mat IIJ2,
   }
   return(res);
 }
-
-
