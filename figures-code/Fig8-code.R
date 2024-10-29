@@ -64,10 +64,10 @@ df1_c2 = data.frame(x1 = c(Gmj.log[even, 12,]))
 set.seed(1)
 ggplot() +
   geom_density(aes(x = x1), df1,  alpha = 0.3, adjust = 1) +
-  geom_density(aes(x = x1), df1_c2,  alpha = 0.3, adjust = 1, col = 'red',
+  geom_density(aes(x = x1), df1_c2,  alpha = 0.3, adjust = 1.1, col = 'red',
                lty = 2) +
   xlim(-2, 17) +
-  ylim(0, .39) +
+  ylim(0, .425) +
   xlab(TeX("$\\log(Y_{i1j}+1)$")) +
   ylab("Posterior Predictive Density") +
   theme_bw() +
@@ -76,9 +76,9 @@ ggplot() +
   theme(axis.text=element_text(size=25),
         text=element_text(size=25)) + 
   theme(panel.grid.minor = element_blank())+ 
-  geom_point(aes(x = jitter(Gmj.true[odds, 12], 10) , y = 0.35), 
+  geom_point(aes(x = jitter(Gmj.true[odds, 12], 10) , y = 0.39), 
              col = "black", shape = 20, size =5)+ 
-  geom_point(aes(x = jitter(Gmj.true[even, 12], 10) , y = 0.38), 
+  geom_point(aes(x = jitter(Gmj.true[even, 12], 10) , y = 0.42), 
              col = "red", shape = 4, size =5)
 
 ######################### plot 8(b) ############################
@@ -91,7 +91,7 @@ ggplot() +
   geom_density(aes(x = x2), df2_c2,  alpha = 0.3, adjust = 1, col = 'red',
                lty = 2) +
   xlim(-2, 15) +
-  ylim(0, 0.7) +
+  ylim(0, 1.4) +
   xlab(TeX("$\\log(Y_{i1j}+1)$")) +
   ylab("Posterior Predictive Density") +
   theme_bw() +
@@ -100,9 +100,9 @@ ggplot() +
   theme(axis.text=element_text(size=25),
         text=element_text(size=25)) + 
   theme(panel.grid.minor = element_blank())+ 
-  geom_point(aes(x = jitter(Gmj.true[odds, 32], 10) , y = 0.65), 
+  geom_point(aes(x = jitter(Gmj.true[odds, 32], 10) , y = 1.3), 
              col = "black", shape = 20, size =5)+ 
-  geom_point(aes(x = jitter(Gmj.true[even, 32], 10) , y = 0.70), 
+  geom_point(aes(x = jitter(Gmj.true[even, 32], 10) , y = 1.4), 
              col = "red", shape = 4, size =5)
 
 
@@ -156,8 +156,8 @@ even = seq(2,n, 2)
 df3_c2 = data.frame(x3 = c(Gmj2.log[even, j3,]))
 set.seed(1)
 ggplot() +
-  geom_density(aes(x = x3), df3,  alpha = 0.3, adjust = 2) +
-  geom_density(aes(x = x3), df3_c2,  alpha = 0.3, adjust = 2, col = 'red',
+  geom_density(aes(x = x3), df3,  alpha = 0.3, adjust = 1) +
+  geom_density(aes(x = x3), df3_c2,  alpha = 0.3, adjust = 1, col = 'red',
                lty = 2) +
   xlim(-2, 17) +
   ylim(0, 1.63) +
