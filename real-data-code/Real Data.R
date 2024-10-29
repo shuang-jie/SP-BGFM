@@ -38,18 +38,27 @@ pos.phi = function(t.phi, wj){
   ttt[ttt==0] = sort(ttt[ttt!=0])[1]
   dgamma(t.phi[wj], a.phi, 1, log = T) + sum(dnorm(Lambda[, ki], 0, ttt, log=T)) + log(t.phi[wj])
 } 
+pos.phi = function(t.phi, wj){
+  ttt = sqrt(zeta[, ki] * t.phi/sum(t.phi) * tau[ki])
+  ttt[ttt==0] = sort(ttt[ttt!=0])[1]
+  dgamma(t.phi[wj], a.phi, 1, log = T) + sum(dnorm(Lambda[, ki], 0, ttt, log=T)) + log(t.phi[wj])
+} 
 
 ####################### set up dimension in the paper ############
 
-m = 2; n = nrow(Y); s = 20; seed = 1
+m = 2; s = 20; seed = 1
 S = rep(1:s, each = 3)
 M = rep(c(1:m), J)
 p = ncol(X)
 
-######################### prior hyper-parameter ####################
+######################### prior hyper-parameter #########
 
 K = 15; a.sig = 3; b.sig = 3; a.phi = 1/20 
 a.tau = 0.1; b.tau = 1/Jsum; acc.tar = 0.234
+
+sig.pro = matrix(1, Jsum, K)
+nacc = true.nacc = matrix(0, Jsum, K)
+acc = matrix(0, Jsum, K)
 
 ######################### prior mean hyper-parameter #########################
 
@@ -63,7 +72,9 @@ for(mi in 1:m){
   hat.alpha[(1:J[mi])+sum(J[1:(mi-1)])* (mi!=1)] = 
     colMeans( log(Y[,(1:J[mi])+sum(J[1:(mi-1)])* (mi!=1)]+0.01) - matrix(hat.ri[mi,], n, J[mi]) )
 }
+
 hat.alphasij = matrix(0, s, Jsum)
+
 for(i in 1:s){
   for(j in 1:Jsum){
     hat.alphasij[i, j] = mean(log(Y[which(S==i),j]+0.01) - hat.ri[M[j],i])
@@ -72,7 +83,9 @@ for(i in 1:s){
 
 ### ri hyper-parameter ###
 nu.r = rowMeans(hat.ri)
-Lr = 30; a.psi.r = 3; a.w = b.w = 5; ur2 = 1; a.xi = nu.r
+Lr = 30; a.psi.r = 3; a.w = b.w = 5;
+ur2 = 1
+a.xi = nu.r
 ri = hat.ri
 Si1 = matrix(NA, m, n)
 for(mi in 1:m){
@@ -80,16 +93,20 @@ for(mi in 1:m){
 }
 Si2 = matrix(1, nrow = m, ncol = n)
 set.seed(seed)
-w.l.r = lapply(1:m, function(x) rbeta(Lr, a.w, b.w))
+w_l_r_m = lapply(1:m, function(x) rbeta(Lr, a.w, b.w))
 V.r = lapply(1:m, function(x){
   res <- rbeta(Lr-1, 1, a.psi.r)
   return(res)
 })
 psi.r =  lapply(1:m, function(x) V.recover.psi(V.r[[x]]))
 psi.r = matrix(unlist(psi.r), m, Lr[1], byrow = T)
-w.l.r = matrix(unlist(w.l.r), m, Lr[1], byrow = T)
+w_l_r_m = matrix(unlist(w_l_r_m), m, Lr[1], byrow = T)
 xi = matrix(0, m, Lr[1])
-sig2.xi.r = rep(1, m)
+mu_adap_w_r = matrix(0, m, Lr[1])
+sig_pro_wlr = matrix(1, m, Lr[1])
+loglbd_wr = matrix(log(2.38^2/1), m, Lr)
+nacc.w.r = true.nacc.w.r = matrix(0, m, Lr)
+
 
 ### alphai hyper-parameter ###
 nu.alpha = hat.alpha
@@ -112,10 +129,19 @@ xi.alpha = matrix(rnorm(Jsum * L.alpha, nu.alpha, sqrt(u2.alpha)), Jsum, L.alpha
 w.alpha = lapply(1:m, function(x) rbeta(L.alpha, a.w.alpha, b.w.alpha))
 V.alpha <- lapply(1:m, function(x){rbeta(L.alpha-1, 1, a.psi.alpha)})
 psi.alpha = lapply(1:m, function(x) V.recover.psi(V.alpha[[x]]))
+
 w.alpha = matrix(unlist(w.alpha), m, L.alpha, byrow = T)
 psi.alpha = matrix(unlist(psi.alpha), m, L.alpha, byrow = T)
 
+mu_adap_w_a = matrix(0, m, L.alpha)
+sig.pro.wla = matrix(1, m, L.alpha)
+nacc.w.a = matrix(0, m, L.alpha)
+true.nacc.w.a = matrix(0, m, L.alpha)
+loglbd_wa = matrix(log(2.38^2/1), m, L.alpha)
+
 ######################### start point #########################
+
+ls = list()
 
 phi.m = matrix(0, Jsum, K)
 til.phi.m = til.til.phi.m = matrix(0, Jsum, K)
@@ -128,6 +154,7 @@ for(ki in 1:K){
     til.til.phi.m[Jcol, ki] = log(try)
   }
 }
+
 tau = rep(1, K)
 
 set.seed(seed)
@@ -138,37 +165,26 @@ Dj = diag(rep(1/sig2, J))
 eta = rmvn(n, rep(0, K), diag(1, K))
 Lambda = matrix(0, nrow = Jsum, ncol =K)
 
-sig.pro = matrix(1, Jsum, K)
-nacc = true.nacc = matrix(0, Jsum, K)
-acc = matrix(0, Jsum, K)
-
 ri = hat.ri
 ri.muij = t(ri)[,rep(1:m, J)]
 y.star = log(Y+0.01)
 Z = matrix(1/rgamma(Jsum *K, 1/2, 1), Jsum, K)
 zeta = matrix(1/rgamma(Jsum *K, 1/2, 1/Z), Jsum, K)
 
-log.Y = log(Y)
-log.Y1 = log(Y+1)
-J.ls = lapply(1:m, function(x) which(M==x))
-
-J_bound = J
-J_bound[1] = J_bound[1] -1
-J_bound = c(0, cumsum(J_bound))
-
 mu_beta = matrix(0, nrow = p, ncol=1)
 u2_beta = 3
 beta_jp <- matrix(0, nrow = Jsum, ncol = p)
 
+sig2.xi.r = rep(1, m)
+log.Y = log(Y)
+log.Y1 = log(Y+1)
 RSS = y.star - ri.muij - alphaij - tcrossprod(eta, Lambda)  - tcrossprod(X, beta_jp)
 
-######################### create storage ###################
+######################### run MCMC #########################
 
-ls = list()
 niter = 150000
 nsamp = niter/10
 count.st = 0
-
 ri.st <- array(NA, dim=c(m, n, nsamp))
 alphasij.st <- array(NA, dim=c(s, Jsum, nsamp))
 xi.alpha.st <- array(NA, dim=c(Jsum, L.alpha[1], nsamp))
@@ -183,9 +199,17 @@ Sij2.st <- array(NA, dim=c(s, Jsum, nsamp))
 eta.st <- array(NA, dim=c(n, K, nsamp))
 beta.st <- array(NA, dim=c(Jsum, p, nsamp))
 
-######################### run MCMC #########################
+J_bound = J
+J_bound[1] = J_bound[1] -1
+J_bound = c(0, cumsum(J_bound))
+
+IIJ1 = Sij1[S, ]
+IIJ2 = Sij2[S, ]
+
+time.stamp.0 <- proc.time()
 
 for(ni in 1:niter){
+  
   # impute continuous latent variable
   RSS = y.star - RSS
   y.star = update_ystar(log.Y, log.Y1, n, Jsum, RSS, sig2, M-1)
@@ -220,34 +244,48 @@ for(ni in 1:niter){
   tau = update_tau_GIG(K, a.tau, b.tau, Jsum, Lambda, phi.m, zeta)
   
   ## update ri related
-  RSS = RSS + ri.muij
-  
-  try = update_psi_w_r(m, Lr, Si1-1, Si2, a.w, b.w, a.psi.r)
-  psi_r_m = adrop(try[,,1,drop = F], drop = 3);
-  w_l_r_m = adrop(try[,,2,drop = F], drop = 3);
-  
+  gamma_adap <- min(0.5, 1/(ni^(2/3)))
+  psi_r_m = update_psi_r(m, Lr, Si1-1, a.psi.r)
+  res = update_w_r_new(w_l_r_m, m, Lr, Si1-1, Si2, a.w, b.w,
+                       sig_pro_wlr, ri, loglbd_wr, sig2,  xi,  nu.r,
+                       nacc.w.r,  true.nacc.w.r,  gamma_adap, 0.44, mu_adap_w_r, n)
+  w_l_r_m = res$w_l_r_m
+  mu_adap_w_r = res$mu_adap_w_r
+  sig_pro_wlr = res$sig_pro_wlr
+  nacc.w.r = res$nacc_w_r
+  true.nacc.w.r = res$true_nacc_w_r
+  loglbd_wr = res$loglbd_wr
   try = update_Si12(Lr, n, m, ri, xi, ur2, nu.r,w_l_r_m, psi_r_m)
   Si1 = adrop(try[,,1,drop = F], drop = 3) + 1
   Si2 = adrop(try[,,2,drop = F], drop = 3)
-  
   xi = update_xi(m, Lr, ri, Si1-1, Si2, a.xi, sig2.xi.r, w_l_r_m, psi_r_m, nu.r, ur2)
+  RSS = RSS + ri.muij
   ri = update_ri(m, n, ur2, J, sig2, RSS, J_bound, Si1-1, Si2, nu.r, xi, w_l_r_m)
-  
   ri.muij = t(ri)[,rep(1:m, J)]
   RSS = RSS - ri.muij
   
   ## update alphai
-  try = update_psi_w(m, L.alpha, J_bound = J_bound, Sij1-1, Sij2, a.w.alpha, 
-                     b.w.alpha, a.psi.alpha)
-  psi.alpha = adrop(try[,,1,drop = F], drop = 3)
-  w.alpha = adrop(try[,,2,drop = F], drop = 3)
-  
+  psi.alpha = update_psi_a(m, L.alpha, J_bound = J_bound, Sij1-1, a.psi.alpha)
   RSS = RSS + alphaij
+  
+  res = update_w_a(w.alpha, m, L.alpha, J_bound, Sij1-1, Sij2, IIJ1-1, IIJ2, a.w.alpha, b.w.alpha,
+                   sig.pro.wla, RSS, loglbd_wa, sig2,  xi.alpha,  nu.alpha,
+                   nacc.w.a,  true.nacc.w.a,  gamma_adap, 0.44, mu_adap_w_a, n)
+  w.alpha = res$w_a
+  mu_adap_w_a = res$mu_adap_w_a
+  sig.pro.wla = res$sig_pro_wla
+  nacc.w.a = res$nacc_w_a
+  true.nacc.w.a = res$true_nacc_w_a
+  loglbd_wa = res$loglbd_wa
+  
+  
   try = update_Sij12(RSS, s, Jsum, L.alpha, xi.alpha, nu.alpha, w.alpha, psi.alpha, M-1,
                      sig2, S-1)
   Sij1 = try[,,1]+1
   Sij2 = try[,,2]
+  # RSS = RSS - alphaij
   
+  # RSS = RSS + alphaij
   IIJ1 = Sij1[S, ]
   IIJ2 = Sij2[S, ]
   xi.alpha = update_xi_alpha(L.alpha, Jsum, RSS, IIJ1-1, IIJ2, u2.alpha, a.xi.alpha, M-1, w.alpha, sig2, nu.alpha)  
@@ -263,13 +301,13 @@ for(ni in 1:niter){
   ## update beta
   RSS = RSS + tcrossprod(X, beta_jp)
   for(ji in 1:Jsum){
-    U.l = chol(diag(rep(1/u2_beta, p)) + crossprod(X) /sig2[M[ji]] )
+    U.l = chol(diag(rep(1/u2_beta, p), nrow = p, ncol = p) + crossprod(X) /sig2[M[ji]] )
     a.l = crossprod(X, RSS[, ji]) / sig2[M[ji]]
     beta_jp[ji, ] = backsolve(U.l, backsolve(U.l, a.l, transpose = T) + rnorm(p))
   }
   RSS = RSS - tcrossprod(X, beta_jp)
   
-  ## save result
+  ## save res
   if((ni > niter/2) & (ni%%5 ==0)){
     count.st = count.st + 1
     ri.st [,, count.st] <- ri
@@ -286,10 +324,11 @@ for(ni in 1:niter){
     tau.st[,count.st] <- tau
     phi.m.st[,, count.st] <- phi.m
     eta.st[,, count.st] <- eta
-    print(ni)
   }
+  cat(ni, '\r')
 }
 
 save.image("./real-data/Real Data.RData")
+
 
 
