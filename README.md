@@ -10,16 +10,41 @@ Contact: Shuangjie Zhang (szhan209 AT tamu DOT edu)
 SP-BGFM requires R packages, especially Rcpp and RcppArmadillo for Rc++ functions: 
 
 ```
-install.packages(c("Rcpp", "RcppArmadillo", "statmod", "GIGrvg", "extraDistr", "abind", "mvnfast", "mvnfast", "statmod", "extraDistr"))
+install.packages(c("Rcpp", "RcppArmadillo", "statmod", "GIGrvg", "extraDistr", "abind", "mvnfast", "LaplacesDemon", "latex2exp", "tikzDevice"))
 ```
+
+
 
 For a comparison of the SPIEC-EASI method, please install
 
 ```
-install.packages("SpiecEasi")
+library(devtools)
+install_github("zdk123/SpiecEasi")
+library(SpiecEasi)
+```
+
+For a comparison of the metagenomeSeq method, please install
+
+```
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+```
+
+Then, we are able to install metagenomeSeq package and ComplexHeatmap for plotting:
+
+```
+BiocManager::install("ComplexHeatmap")
+BiocManager::install("metagenomeSeq")
 ```
 
 Please make sure the C++ compiler is correctly installed. For Mac user, please install Xcode from command line tools. Execute the command ```xcode-select --install``` on Terminal.
+
+
+## R project reproducing instruction
+
+An user friendly way to reproduce the results of the main text and the algorithm, one can create a R project by following the steps: Open Rstudio - File - New Project - Version Control - Git - enter the github link: https://github.com/shuang-jie/SP-BGFM.
+
+Then, All simulation codes and real data analysis codes are in each sub-folder. All figures in the maintext can be reproduced by the figures-code.
 
 ## Organization
 
