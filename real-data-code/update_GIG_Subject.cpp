@@ -34,9 +34,20 @@ uvec seq_cpp(int locppid, int hicppid) {
 // [[Rcpp::export]]
 arma::mat mvrnormArma(int n, arma::vec mu, arma::mat sigma) {
   int ncols = sigma.n_cols;
-  arma::mat YY = arma::randn(n, ncols);
-  return arma::repmat(mu, 1, n).t() + YY * arma::chol(sigma);
+  arma::mat Y = arma::randn(n, ncols);
+  
+  // Ensure symmetric
+  sigma = 0.5 * (sigma + sigma.t());
+  
+  arma::mat chol_sigma;
+  bool success = arma::chol(chol_sigma, sigma, "lower");
+  if (!success) {
+    sigma += 1e-6 * arma::eye(ncols, ncols);
+    arma::chol(chol_sigma, sigma, "lower");
+  }
+  return arma::repmat(mu, 1, n).t() + Y * chol_sigma.t();
 }
+
 
 // [[Rcpp::export]]
 double pos_phi(vec t_p, int wj, int wk, int Jsum, double a_phi, mat Lambda, mat zeta, 
